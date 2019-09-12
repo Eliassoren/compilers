@@ -33,10 +33,18 @@ node_print ( node_t *root, int nesting )
 void
 node_init (node_t *nd, node_index_t type, void *data, uint64_t n_children, ...)
 {
-    malloc(sizeof(nd));
+    
     nd->data = data;
-    nd->children = n_children;
+    nd->n_children = n_children;
     nd->type = type;
+
+    nd -> children = (node_t**) malloc(n_children * sizeof(node_t *));
+    va_list child_list;
+    va_start(child_list, n_children);
+    for(int i = 0; i < n_children; i++) {
+        nd -> children[i] = va_arg(child_list, node_t *);
+    }
+    va_end(child_list);
 }
 
 
@@ -44,7 +52,12 @@ node_init (node_t *nd, node_index_t type, void *data, uint64_t n_children, ...)
 void
 node_finalize ( node_t *discard )
 {
-    free
+    if(discard == NULL) {
+        return;
+    }
+
+   free(discard -> children);
+   free(discard);
 }
 
 
@@ -52,5 +65,12 @@ node_finalize ( node_t *discard )
 void
 destroy_subtree ( node_t *discard )
 {
-    free ( discard );
+    if(discard == NULL) {
+        return;
+    }
+    for(int i = 0; i < discard -> n_children; i++) {
+        destroy_subtree(discard -> children[i]);
+        node_finalize(discard -> children[i]);
+    }
+    
 }
